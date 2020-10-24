@@ -62,9 +62,9 @@ test('x-spread supports x-for', async () => {
 
     Alpine.start()
 
-    expect(document.querySelectorAll('li')[0].innerText).toEqual('one')
-    expect(document.querySelectorAll('li')[1].innerText).toEqual('two')
-    expect(document.querySelectorAll('li')[2].innerText).toEqual('three')
+    expect(document.querySelectorAll('li')[0].textContent).toEqual('one')
+    expect(document.querySelectorAll('li')[1].textContent).toEqual('two')
+    expect(document.querySelectorAll('li')[2].textContent).toEqual('three')
 })
 
 test('x-spread syntax supports x-transition', async () => {
@@ -92,6 +92,9 @@ test('x-spread syntax supports x-transition', async () => {
                 ['x-transition:enter']() { return 'enter' },
                 ['x-transition:enter-start']() { return 'enter-start' },
                 ['x-transition:enter-end']() { return 'enter-end' },
+                ['x-transition:leave']() { return 'leave' },
+                ['x-transition:leave-start']() { return 'leave-start' },
+                ['x-transition:leave-end']() { return 'leave-end' },
             },
         }
     }
@@ -142,6 +145,44 @@ test('x-spread syntax supports x-transition', async () => {
             expect(document.querySelector('span').classList.contains('enter-start')).toEqual(false)
             expect(document.querySelector('span').classList.contains('enter-end')).toEqual(false)
             expect(document.querySelector('span').getAttribute('style')).toEqual(null)
+            resolve();
+        }, 10)
+    )
+
+    document.querySelector('button').click()
+
+    // Wait out the intial Alpine refresh debounce.
+    await new Promise((resolve) =>
+        setTimeout(() => {
+            resolve();
+        }, 5)
+    )
+
+    expect(document.querySelector('span').classList.contains('leave')).toEqual(true)
+    expect(document.querySelector('span').classList.contains('leave-start')).toEqual(true)
+    expect(document.querySelector('span').classList.contains('leave-end')).toEqual(false)
+    expect(document.querySelector('span').getAttribute('style')).toEqual(null)
+
+    frameStack.pop()()
+
+    expect(document.querySelector('span').classList.contains('leave')).toEqual(true)
+    expect(document.querySelector('span').classList.contains('leave-start')).toEqual(true)
+    expect(document.querySelector('span').classList.contains('leave-end')).toEqual(false)
+    expect(document.querySelector('span').getAttribute('style')).toEqual(null)
+
+    frameStack.pop()()
+
+    expect(document.querySelector('span').classList.contains('leave')).toEqual(true)
+    expect(document.querySelector('span').classList.contains('leave-start')).toEqual(false)
+    expect(document.querySelector('span').classList.contains('leave-end')).toEqual(true)
+    expect(document.querySelector('span').getAttribute('style')).toEqual(null)
+
+    await new Promise((resolve) =>
+        setTimeout(() => {
+            expect(document.querySelector('span').classList.contains('leave')).toEqual(false)
+            expect(document.querySelector('span').classList.contains('leave-start')).toEqual(false)
+            expect(document.querySelector('span').classList.contains('leave-end')).toEqual(false)
+            expect(document.querySelector('span').getAttribute('style')).toEqual('display: none;')
             resolve();
         }, 10)
     )
